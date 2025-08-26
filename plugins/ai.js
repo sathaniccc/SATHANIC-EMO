@@ -1,26 +1,32 @@
 const { Configuration, OpenAIApi } = require("openai")
 
-const openai = new OpenAIApi(new Configuration({
-  apiKey: "5e5a17fc-3cad-44e6-87b8-3dd390b28078" // 👉 OpenAI API Key add ചെയ്യണം
-}))
+const openai = new OpenAIApi(
+  new Configuration({
+    apiKey: process.env.OPENAI_API_KEY || "PUT-YOUR-API-KEY-HERE"
+  })
+)
 
-module.exports = (sock) => {
-  sock.ev.on("messages.upsert", async ({ messages }) => {
-    const m = messages[0]
-    if (!m.message) return
-    const from = m.key.remoteJid
-    const text = m.message.conversation || m.message.extendedTextMessage?.text || ""
+module.exports = {
+  name: "ai",
+  execute: async (sock, msg, args) => {
+    const from = msg.key.remoteJid
+    const q = args.join(" ")
 
-    if (text.startsWith(".ai")) {
-      const q = text.replace(".ai", "").trim()
-      if (!q) return sock.sendMessage(from, { text: "❌ ചോദ്യം കൊടുക്കൂ!" })
+    if (!q) {
+      return await sock.sendMessage(from, { text: "❌ ചോദ്യം കൊടുക്കൂ!" }, { quoted: msg })
+    }
 
+    try {
       const res = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [{ role: "user", content: "Malayalam-ൽ മറുപടി കൊടുക്കു: " + q }]
       })
 
-      await sock.sendMessage(from, { text: res.choices[0].message.content })
+      const answer = res.choices[0].message.content
+      await sock.sendMessage(from, { text: answer }, { quoted: msg })
+    } catch (err) {
+      console.error("AI error:", err)
+      await sock.sendMessage(from, { text: "⚠️ AI error: " + err.message }, { quoted: msg })
     }
-  })
+  }
 }
