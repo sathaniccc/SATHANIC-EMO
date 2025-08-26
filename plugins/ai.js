@@ -1,7 +1,7 @@
 const { Configuration, OpenAIApi } = require("openai")
 
 const openai = new OpenAIApi(new Configuration({
-  apiKey: "YOUR_OPENAI_KEY" // 👉 OpenAI API Key add ചെയ്യണം
+  apiKey: "5e5a17fc-3cad-44e6-87b8-3dd390b28078" // 👉 OpenAI API Key add ചെയ്യണം
 }))
 
 module.exports = (sock) => {
