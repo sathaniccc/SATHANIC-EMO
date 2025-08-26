@@ -1,15 +1,14 @@
 
 module.exports = {
     name: "menu",
-    execute: async (sock, msg, args) => {
+    desc: "📜 Available commands കാണിക്കുക",
+    execute: async (sock, msg) => {
         const from = msg.key.remoteJid
-        const text = `📌 Sathanic Bot — Menu
-.alive - Check bot
-.menu - ഈ മെനു
-.tagall - എല്ലാവരെയും mention ചെയ്യുക (group admin ആവശ്യമാണ്)
-.sticker - മീഡിയ reply ചെയ്ത് .sticker അയയ്ക്കുക
-.ytmp3 <url> - YouTube നിന്ന് MP3 download
-.download <url> - സാധാരണ download`
+        let text = "📜 *Sathanic Emo Bot — Menu*\n\n"
+
+        global.commands.forEach((cmd, name) => {
+            text += `🔹 .${name} → ${cmd.desc || "No description"}\n`
+        })
 
         await sock.sendMessage(from, { text }, { quoted: msg })
     }
