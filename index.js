@@ -1,22 +1,73 @@
-const { default: makeWASocket, useMultiFileAuthState } = require("@adiwajshing/baileys")
+// ===============================
+// SATHANIC-EMO WhatsApp Bot
+// ===============================
+
+const {
+    default: makeWASocket,
+    useMultiFileAuthState,
+    DisconnectReason
+} = require("@whiskeysockets/baileys")
+
 const pino = require("pino")
-const { loadCommands } = require("./lib/helper")
+const qrcode = require("qrcode-terminal")
 
+// ===============================
+// Main Function
+// ===============================
 async function startBot() {
-  const { state, saveCreds } = await useMultiFileAuthState("auth")
-  const sock = makeWASocket({ logger: pino({ level: "silent" }), auth: state, printQRInTerminal: false })
+    const { state, saveCreds } = await useMultiFileAuthState("./session")
 
-  if (!sock.authState.creds.registered) {
-    const code = await sock.requestPairingCode("918921016567") // 👉 ഇവിടെ നമ്പർ കൊടുക്കണം
-    console.log("നിന്റെ WhatsApp Pairing Code:", code)
-  }
+    const sock = makeWASocket({
+        logger: pino({ level: "silent" }),
+        printQRInTerminal: false, // ❌ deprecated, അതുകൊണ്ട് false ആക്കി
+        auth: state
+    })
 
-  sock.ev.on("creds.update", saveCreds)
-  sock.ev.on("connection.update", (u) => {
-    if (u.connection === "open") console.log("✅ Sathanic Emo Connected")
-  })
+    // ===============================
+    // QR Code Handling
+    // ===============================
+    sock.ev.on("connection.update", (update) => {
+        const { connection, lastDisconnect, qr } = update
 
-  loadCommands(sock)
+        if (qr) {
+            console.log("📌 Scan ചെയ്യാനുള്ള QR:")
+            qrcode.generate(qr, { small: true })
+        }
+
+        if (connection === "open") {
+            console.log("✅ WhatsApp Connected Successfully!")
+        } else if (connection === "close") {
+            const shouldReconnect =
+                lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut
+            console.log("❌ Connection closed. Reconnecting:", shouldReconnect)
+            if (shouldReconnect) {
+                startBot()
+            }
+        }
+    })
+
+    // ===============================
+    // Save Creds (session)
+    // ===============================
+    sock.ev.on("creds.update", saveCreds)
+
+    // ===============================
+    // Basic Command Example
+    // ===============================
+    sock.ev.on("messages.upsert", async ({ messages }) => {
+        const msg = messages[0]
+        if (!msg.message) return
+
+        const from = msg.key.remoteJid
+        const text = msg.message.conversation || msg.message.extendedTextMessage?.text
+
+        if (text?.toLowerCase() === "alive") {
+            await sock.sendMessage(from, { text: "👋 I am Alive, SATHANIC-EMO Bot Connected!" })
+        }
+    })
 }
 
-startBot()￼Enter
+// ===============================
+// Start Bot
+// ===============================
+startBot()
