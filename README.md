@@ -3,7 +3,10 @@
 **Sathanic Emo** ഒരു advanced WhatsApp bot ആണ്, Termux / Node.js ഉപയോഗിച്ച് run ചെയ്യാവുന്നതും, **Malayalam users**-ക്ക് വേണ്ടി customize ചെയ്തതാണ്.  
 AI + TTS + Malayalam commands മുഴുവനായി support ചെയ്യുന്നു.  
 
----
+<img src="https://ik.imagekit.io/p9wb7asot/Screenshot_2025-08-26-18-15-58-824_com.pinterest.png?updatedAt=1756213481657"  width="500px">
+  </a>
+
+--
 
 ## ✨ Features  
 
