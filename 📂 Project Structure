@@ -1,0 +1,10 @@
+SathanicEmo/
+│── package.json
+│── index.js
+│── auth/ (auto create)
+│── plugins/
+│    ├── alive.js
+│    ├── tts.js
+│    └── ai.js
+│── lib/
+│    └── helper.js
