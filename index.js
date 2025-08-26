@@ -1,5 +1,4 @@
-// ===============================
-// SATHANIC-EMO Bot (Fixed Version)
+// SATHANIC-EMO Bot (Safer Version)
 // ===============================
 
 const {
@@ -14,14 +13,24 @@ const fs = require("fs")
 const path = require("path")
 
 // ===============================
-// Plugin Loader
+// Plugin Loader (Safe)
 // ===============================
 const plugins = {}
 const pluginsPath = path.join(__dirname, "plugins")
+
 fs.readdirSync(pluginsPath).forEach(file => {
     if (file.endsWith(".js")) {
-        const command = require(path.join(pluginsPath, file))
-        plugins[command.name] = command
+        try {
+            const command = require(path.join(pluginsPath, file))
+            if (command.name && typeof command.execute === "function") {
+                plugins[command.name] = command
+                console.log(`✅ Plugin loaded: ${command.name}`)
+            } else {
+                console.log(`⚠️ Skipped invalid plugin: ${file}`)
+            }
+        } catch (e) {
+            console.error(`❌ Error loading plugin ${file}:`, e)
+        }
     }
 })
 
@@ -85,14 +94,15 @@ async function startBot() {
         const prefix = "."
         if (text.startsWith(prefix)) {
             const [cmd, ...args] = text.slice(prefix.length).trim().split(/\s+/)
-            if (plugins[cmd]) {
+            const command = plugins[cmd]
+            if (command) {
                 try {
-                    await plugins[cmd].execute(sock, msg, args)
+                    await command.execute(sock, msg, args, from)  // 👈 passing "from"
                 } catch (e) {
                     console.error(e)
                     await sock.sendMessage(from, {
                         text: "❌ Command run ചെയ്യുമ്പോൾ error!"
-                    })
+                    }, { quoted: msg })
                 }
             }
         }
