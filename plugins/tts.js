@@ -1,18 +1,30 @@
 const gTTS = require("gtts")
+const fs = require("fs")
 
-module.exports = (sock) => {
-  sock.ev.on("messages.upsert", async ({ messages }) => {
-    const m = messages[0]
-    if (!m.message) return
-    const from = m.key.remoteJid
-    const text = m.message.conversation || m.message.extendedTextMessage?.text || ""
+module.exports = {
+    name: "പറ",   // Command = .പറ
+    execute: async (sock, msg, args) => {
+        const from = msg.key.remoteJid
+        const text = args.join(" ") || "ഹലോ സുഹൃത്തേ"
 
-    if (text.startsWith(".പറ")) {
-      const msg = text.split(" ").slice(1).join(" ") || "ഹലോ സുഹൃത്തേ"
-      const gtts = new gTTS(msg, "ml")
-      gtts.save("voice.mp3", () => {
-        sock.sendMessage(from, { audio: { url: "./voice.mp3" }, mimetype: "audio/mp4", ptt: true })
-      })
+        try {
+            const gtts = new gTTS(text, "ml")
+            const filename = `/tmp/voice_${Date.now()}.mp3`
+
+            gtts.save(filename, () => {
+                sock.sendMessage(
+                    from,
+                    { audio: { url: filename }, mimetype: "audio/mp4", ptt: true },
+                    { quoted: msg }
+                )
+                // Delete temp file
+                setTimeout(() => {
+                    fs.unlinkSync(filename)
+                }, 5000)
+            })
+        } catch (e) {
+            console.error("TTS Error:", e)
+            await sock.sendMessage(from, { text: "❌ Voice generate ചെയ്യുമ്പോൾ പിശക്!" }, { quoted: msg })
+        }
     }
-  })
 }
